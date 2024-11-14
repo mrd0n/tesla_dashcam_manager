@@ -1,35 +1,37 @@
-# Example snippet for docker-compose.yml.
-version: "3"
-
 services:
 
-## Example setup for pigallery2, pigallery2 can be accessed at port 5000 here
-#  pigallery2:
-#    image: bpatrik/pigallery2:1.9.0-alpine
-#    container_name: pigallery2
-#    privileged: true
-#    environment:
-#      - NODE_ENV=production
-#    volumes:
-#      - "/var/lib/pigallery2/config:/app/data/config"
-#      - "pigallery-db-data:/app/data/db"
-#      - "/mnt/photos:/app/data/images"
-#      - "/tmp:/app/data/tmp"
-#    ports:
-#      - 5000:5000
-#    restart: always
-
   tesla-dashcam-manager:
-    image: simonkagstrom/tesla_dashcam_manager:latest
+#    image: simonkagstrom/tesla_dashcam_manager:latest
+    build: .
     restart: always
+    container_name: tesla-dashcam
     environment:
-        - TZ=Europe/Stockholm
-        - TESLA_DASHCAM_ARGUMENTS=--title_screen_map --text_overlay_fmt "{event_timestamp} {event_city}"
-        - RETAIN_DAYS=365
-        - DESTINATION_RETAIN_DAYS=0
-    devices:
-        - "/dev/vchiq:/dev/vchiq"
+      - TZ=America/Edmonton
+      - TESLA_DASHCAM_ARGUMENTS=--fps 33 --title_screen_map --temp_dir /app/temp_dir --speedup 4 --text_overlay_fmt "{local_timestamp_rolling} {event_city} {event_reason}" --timestamp_format "%X %b %-d %Y"
+      - RETAIN_DAYS=60
+      - DESTINATION_RETAIN_DAYS=30
+      - PYTHONUNBUFFERED=1
     volumes:
-        - "/mnt/staging:/app/staging"
-        - "/mnt/raw-storage:/app/raw-storage"
-        - "/mnt/photos/TeslaCam:/app/destination-path"
+      - "./src/tesla_dashcam_manager.py:/usr/bin/tesla_dashcam_manager.py"
+      - "/mnt/teslausb/teslausb:/app/staging"
+      - "/mnt/teslausb/TeslaCam/Archive:/app/raw-storage"
+      - "/mnt/teslausb/TeslaCamMerged:/app/destination-path"
+      - "./temp_dir:/app/temp_dir"
+
+  pigallery2:
+    image: bpatrik/pigallery2:latest
+    container_name: pigallery2
+    environment:
+      - NODE_ENV=production # set to 'debug' for full debug logging otherwise set to production
+      # - NODE_OPTIONS=--enable-source-maps # enable source map support on the backend  for development
+    volumes:
+      - "./pigallery2/config:/app/data/config"
+      - "db-data-pigallery:/app/data/db"
+      - "/mnt/teslausb/TeslaCamMerged:/app/data/images:ro"
+      - "./pigallery2/tmp:/app/data/tmp"
+    ports:
+      - 80:80
+    restart: always
+
+volumes:
+  db-data-pigallery:
