@@ -7,7 +7,7 @@ services:
     container_name: tesla-dashcam
     environment:
       - TZ=America/Edmonton
-      - TESLA_DASHCAM_ARGUMENTS=--fps 33 --title_screen_map --temp_dir /app/temp_dir --speedup 4 --text_overlay_fmt "{local_timestamp_rolling} {event_city} {event_reason}" --timestamp_format "%X %b %-d %Y"
+      - TESLA_DASHCAM_ARGUMENTS=--title_screen_map --temp_dir /app/temp_dir --speedup 4 --text_overlay_fmt "{local_timestamp_rolling} {event_city} {event_reason}" --timestamp_format "%X %b %-d %Y"
       - RETAIN_DAYS=60
       - DESTINATION_RETAIN_DAYS=30
       - PYTHONUNBUFFERED=1
